@@ -6,6 +6,7 @@ var remoteScripts = {
     },
     urlStates: {},
     define: function (urls, detect, done) {
+        // Define container
         var container = document.getElementById(remoteScripts.options.containerId);
         if (!container) {
             container = document.createElement('div');
@@ -20,40 +21,52 @@ var remoteScripts = {
             document.body.appendChild(container);
         }
 
+        // Convert to an array
         urls = Array.isArray(urls) ? urls : (typeof urls === 'string' ? [urls] : []);
         urls.forEach(function (url) {
-            if (detect && detect(url)) return; // Already defined...
-            if (url in remoteScripts.urlStates) return; // State already exists...
-
-            console.log('   + ', url);
-
-            // ToDo: Create Link and define...
-            var elem = document.createElement('div');
-            {
-                elem.className = 'bar info';
-                elem.innerHTML =
-                    '<i class="fa fa-cog faa-spin animated" style="margin-right: 3px;"></i>' +
-                    '<span>Loading resource: </span>' +
-                    '<a target="_blank" href="' + url + '">' + url + '</a>' +
-                    '<a href="#" style="float: right; margin-right: 8px;">Dismis</a>' +
-                    '<a href="#" style="float: right; margin-right: 8px;">Retry</a>';
-            }
-            container.appendChild(elem);
-
-            var info = {
+            var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : {
                 url: url,
                 qry: detect,
                 done: done,
-                elem: elem,
+                elem: null,
                 state: null,
             };
+            var elem = info ? info.elem : null;
+            if (info && info.qry && info.qry(url)) {
+                info.state = true;
+                remoteScripts.remove(url);
+                if (done) done(url, info);
+                return; // Already defined...
+            }
+            if (url in remoteScripts.urlStates) {
+                if (!info.state) {
+                    remoteScripts.retry(url);
+                }
+                return; // Already Busy...
+            } else {
+                console.log('   + ', url);
+
+                elem = document.createElement('div');
+                {
+                    elem.className = 'bar info';
+                    elem.innerHTML =
+                        '<i class="fa fa-cog faa-spin animated" style="margin-right: 3px;"></i>' +
+                        '<span>Loading resource: </span>' +
+                        '<a target="_blank" href="' + url + '">' + url + '</a>' +
+                        '<a href="#" style="float: right; margin-right: 8px;">Dismis</a>' +
+                        '<a href="#" style="float: right; margin-right: 8px;">Retry</a>';
+                }
+                container.appendChild(elem);
+
+                info.elem = elem;
+            }
 
             var btnLink = (elem.childNodes.length > 2) ? elem.childNodes[2] : null;
             if (btnLink) {
                 btnLink.onclick = function () {
                     return remoteScripts.fetch(this, info);
                 }
-                btnLink.click();
+                if (info.state === null) btnLink.click();
             }
 
             var btnClose = (elem.childNodes.length > 3) ? elem.childNodes[3] : null;
@@ -78,7 +91,12 @@ var remoteScripts = {
     fetch: function (link, info) {
         var url = link.href;
         if (url in remoteScripts.urlStates) {
-            // Failed to load script: Open in new window...
+            if (info.state) {
+                remoteScripts.ready(url);
+                return false;
+            } else {
+                // Open in new window...
+            }
         } else {
             // First try and load with normal script tag...
             remoteScripts.urlStates[url] = info;
@@ -89,13 +107,11 @@ var remoteScripts = {
         }
     },
     attach: function (url, callback) {
-        var isReady = false;
         try {
             // Try and load the script normally
             var srciptElem = document.createElement('script');
             if (srciptElem) {
                 srciptElem.onload = function (evt) {
-                    isReady = true;
                     if (callback) callback(url, true);
                 }
                 srciptElem.src = url;
@@ -104,22 +120,28 @@ var remoteScripts = {
 
             // Set timer to check for timeout
             var intv = setInterval(function () {
-                clearInterval(intv);
-                if (!isReady && callback) {
-                    isReady = true;
+                if (callback) {
                     callback(url, false);
                 }
+                clearInterval(intv);
             }, remoteScripts.delay);
         } catch (ex) {
             console.warn('Warning: Script refused to load. ' + ex.message);
-            isReady = true;
             callback(url, false);
         }
     },
     result: function (url, success) {
+        var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
         if (!success) {
+
             // Failed to load script normally, try workaround...
             remoteScripts.retry(url);
+
+            // Notify script failed
+            var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
+            if (info && info.done) {
+                info.done(url, info);
+            }
         } else {
             // Loaded normally...
             remoteScripts.ready(url);
@@ -128,6 +150,22 @@ var remoteScripts = {
     retry: function (url) {
         var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
         if (info && !info.state) {
+            info.state = null;
+
+            console.warn('   R ', url);
+
+            if (info.done) {
+                info.done(url, info);
+            }
+
+            // Update UI state...
+            if (info.elem && info.elem.childNodes.length > 4) {
+                info.elem.className = 'bar warn';
+                info.elem.childNodes[0].className = 'fa fa-question-circle faa-tada animated';
+                info.elem.childNodes[1].innerHTML = '<b>Loading:</b> ';
+                info.elem.childNodes[3].style.display = 'inline';
+                info.elem.childNodes[4].style.display = 'inline';
+            }
 
             // Detect if present...
             if (info.qry && info.qry()) {
@@ -135,29 +173,33 @@ var remoteScripts = {
                 return; // Already loaded...
             }
 
-            // Update UI state...
-            if (info.elem && info.elem.childNodes.length > 4) {
-                info.elem.className = 'bar warn';
-                info.elem.childNodes[0].className = 'fa fa-warning faa-tada animated';
-                info.elem.childNodes[1].innerHTML = '<b>Problem loading:</b> ';
-                info.elem.childNodes[3].style.display = 'inline';
-                info.elem.childNodes[4].style.display = 'inline';
-            }
-
             // Set a timer to check for reult (if exist)
-            if (!info.intv && info.qry) {
+            var msCounter = 0;
+            var msChecker = 2 * 1000; // Check every 2 seconds
+            var msTimeout = 2 * 60 * 1000; // Timeout in 2 mins
+            if (!info.intv) {
                 info.intv = setInterval(function () {
+                    // Count ellapsed time
+                    msCounter += msChecker;
+
+                    console.log(' - Check: ', info.qry && info.qry());
+
+                    // Check for timeout
+                    if (info.done && msCounter >= msTimeout) {
+                        // Failed to load...
+                        info.intv = clearInterval(info.intv);
+                        return remoteScripts.failed(url);
+                    }
+
                     // Check if loaded...
                     if (info.state || info.qry && info.qry()) {
                         // Done loading...
-                        clearInterval(info.intv);
+                        info.intv = clearInterval(info.intv);
                         return remoteScripts.ready(url);
                     }
-                }, 2 * 1000);
-            }
 
-            // ToDo: Get alternative way to fetch data...
-            console.warn('   ! ', url);
+                }, msChecker);
+            }
         }
     },
     ready: function (url) {
@@ -168,12 +210,31 @@ var remoteScripts = {
         }
         remoteScripts.remove(url);
     },
+    failed: function (url) {
+        var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
+
+        // Update UI state...
+        if (info && info.elem && info.elem.childNodes.length > 4) {
+            info.elem.className = 'bar error';
+            info.elem.childNodes[0].className = 'fa fa-exclamation-circle faa-tada animated';
+            info.elem.childNodes[1].innerHTML = '<b>Failure:</b> ';
+            info.elem.childNodes[3].style.display = 'inline';
+            info.elem.childNodes[4].style.display = 'inline';
+        }
+
+        if (info && info.done) {
+            info.state = false;
+            info.done(url, info);
+        }
+        //remoteScripts.remove(url);
+    },
     remove: function (url) {
         if (url in remoteScripts.urlStates) {
-            var intv = remoteScripts.urlStates[url].intv;
-            if (intv) clearInterval(intv);
+            var info = remoteScripts.urlStates[url];
+            var intv = info.intv;
+            if (intv) info.intv = clearInterval(intv);
 
-            var elem = remoteScripts.urlStates[url].elem;
+            var elem = info.elem;
             if (elem && elem.parentNode) {
                 elem.parentNode.removeChild(elem);
             }
