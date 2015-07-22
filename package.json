@@ -1,0 +1,25 @@
+{
+  "name": "proto-js-loader",
+  "version": "0.0.1",
+  "description": "Prototyped script loader for javascript clients",
+  "main": "ScriptLoader.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JohnnyBeProgramming/proto-js-loader"
+  },
+  "keywords": [
+    "javascript",
+    "script",
+    "loader",
+    "remote"
+  ],
+  "author": "Johnathan Lodder <Johnathan.Lodder@Gmail.com> (http://www.prototyped.info/)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JohnnyBeProgramming/proto-js-loader/issues"
+  },
+  "homepage": "https://github.com/JohnnyBeProgramming/proto-js-loader"
+}
