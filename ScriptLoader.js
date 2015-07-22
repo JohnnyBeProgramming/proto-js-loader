@@ -5,7 +5,7 @@ var remoteScripts = {
         containerCss: 'xss-notify',
     },
     urlStates: {},
-    define: function (urls, detect, done) {
+    define: function (urls, detect, done, parentElem) {
         // Define container
         var container = document.getElementById(remoteScripts.options.containerId);
         if (!container) {
@@ -30,6 +30,7 @@ var remoteScripts = {
                 done: done,
                 elem: null,
                 state: null,
+                parent: parentElem,
             };
             var elem = info ? info.elem : null;
             if (info && info.qry && info.qry(url)) {
@@ -100,13 +101,13 @@ var remoteScripts = {
         } else {
             // First try and load with normal script tag...
             remoteScripts.urlStates[url] = info;
-            remoteScripts.attach(url, remoteScripts.result);
+            remoteScripts.attach(url, remoteScripts.result, info.parent);
 
             // Cancel event bubbling...
             return false;
         }
     },
-    attach: function (url, callback) {
+    attach: function (url, callback, parentElem) {
         try {
             // Try and load the script normally
             var srciptElem = document.createElement('script');
@@ -115,7 +116,7 @@ var remoteScripts = {
                     if (callback) callback(url, true);
                 }
                 srciptElem.src = url;
-                document.body.appendChild(srciptElem);
+                (parentElem || document.body).appendChild(srciptElem);
             }
 
             // Set timer to check for timeout
@@ -175,14 +176,12 @@ var remoteScripts = {
 
             // Set a timer to check for reult (if exist)
             var msCounter = 0;
-            var msChecker = 2 * 1000; // Check every 2 seconds
+            var msChecker = 1 * 1000; // Check every 2 seconds
             var msTimeout = 2 * 60 * 1000; // Timeout in 2 mins
             if (!info.intv) {
                 info.intv = setInterval(function () {
                     // Count ellapsed time
                     msCounter += msChecker;
-
-                    console.log(' - Check: ', info.qry && info.qry());
 
                     // Check for timeout
                     if (info.done && msCounter >= msTimeout) {
