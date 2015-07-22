@@ -11,6 +11,12 @@ var remoteScripts = {
             container = document.createElement('div');
             container.id = remoteScripts.options.containerId;
             container.className = remoteScripts.options.containerCss;
+            container.style.left = '0';
+            container.style.right = '0';
+            container.style.bottom = '0';
+            container.style.fontSize = '11px';
+            container.style.position = 'absolute';
+            container.style.zIndexx = '2110000000';
             document.body.appendChild(container);
         }
 
@@ -24,7 +30,7 @@ var remoteScripts = {
             // ToDo: Create Link and define...
             var elem = document.createElement('div');
             {
-                elem.className = 'info';
+                elem.className = 'bar info';
                 elem.innerHTML =
                     '<i class="fa fa-cog faa-spin animated" style="margin-right: 3px;"></i>' +
                     '<span>Loading resource: </span>' +
@@ -131,7 +137,7 @@ var remoteScripts = {
 
             // Update UI state...
             if (info.elem && info.elem.childNodes.length > 4) {
-                info.elem.className = 'warn';
+                info.elem.className = 'bar warn';
                 info.elem.childNodes[0].className = 'fa fa-warning faa-tada animated';
                 info.elem.childNodes[1].innerHTML = '<b>Problem loading:</b> ';
                 info.elem.childNodes[3].style.display = 'inline';
