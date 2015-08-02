@@ -18,7 +18,7 @@ var remoteScripts = {
     autoLoad: true,
     urlStates: {},
     windowHandle: null,
-    define: function (urls, detect, done, parentElem) {
+    container: function () {
         // Define container
         var container = document.getElementById(remoteScripts.options.containerId);
         if (!container) {
@@ -33,31 +33,9 @@ var remoteScripts = {
             container.style.zIndexx = '2110000000';
             document.body.appendChild(container);
         }
-
-        var relayer = window.___msgRelay___ = window.___msgRelay___ || {
-            events: {},
-            watch: function (relx, callback) {
-                if (relx in relayer.events) {
-                    console.warn('Warning: Event ' + relx + ' already defined.');
-                }
-                relayer.events[relx] = callback;
-            },
-            forget: function (relx) {
-                if (relx in relayer.events) {
-                    delete relayer.events[relx];
-                } else {
-                    console.warn('Warning: Event ' + relx + ' not found.');
-                }
-            },
-            status: function (relx, state, data) {
-                if (relx in relayer.events) {
-                    relayer.events[relx](relx, state, data);
-                } else {
-                    console.warn('Warning: Event ' + relx + ' not found.');
-                }
-            },
-        }
-
+        return container;
+    },
+    define: function (urls, detect, done, parentElem) {
         // Convert to an array
         urls = Array.isArray(urls) ? urls : (typeof urls === 'string' ? [urls] : []);
         urls.forEach(function (url) {
@@ -79,11 +57,6 @@ var remoteScripts = {
                 }
             }
 
-            if (info && info.qry && info.qry(url)) {
-                remoteScripts.ready(url);
-                return; // Already defined...
-            }
-
             var elem = info ? info.elem : null;
             if (url in remoteScripts.urlStates) {
                 remoteScripts.retry(url);
@@ -91,57 +64,61 @@ var remoteScripts = {
             } else {
                 // Attach to container
                 remoteScripts.urlStates[url] = info;
-                elem = document.createElement('div');
-                {
-                    elem.className = 'bar info';
-                    elem.innerHTML =
-                        '<i class="fa fa-cog faa-spin animated" style="margin-right: 3px;"></i>' +
-                        '<span>Loading: </span>' +
-                        '<a target="_blank" href="' + url + '">' + url + '</a>' +
-                        '<a href="#" style="float: right; margin-right: 8px;">Dismis</a>' +
-                        '<a href="#" style="float: right; margin-right: 8px;">Retry</a>';
-                }
-                container.appendChild(elem);
-                info.elem = elem;
+                remoteScripts.infoBar(info);
 
-                var btnLink = (elem.childNodes.length > 2) ? elem.childNodes[2] : null;
-                if (btnLink) {
-                    btnLink.onclick = function () {
-                        return remoteScripts.fetch(this, info);
-                    }
+                // Check if script should be loaded?
+                if (info && (typeof info.qry === 'function') && info.qry(url)) {
+                    remoteScripts.ready(url);
+                    return; // Already defined...
+                } else {
+                    // Try and load the script tag...
+                    info.tag = remoteScripts.attach(info, remoteScripts.result);
                 }
-
-                var btnClose = (elem.childNodes.length > 3) ? elem.childNodes[3] : null;
-                if (btnClose) {
-                    btnClose.style.display = 'none';
-                    btnClose.onclick = function () {
-                        remoteScripts.failed(url);
-                        remoteScripts.remove(url);
-                        return false;
-                    }
-                }
-
-                var btnRetry = (elem.childNodes.length > 4) ? elem.childNodes[4] : null;
-                if (btnRetry) {
-                    btnRetry.style.display = 'none';
-                    btnRetry.onclick = function () {
-                        remoteScripts.retry(url);
-                        return false;
-                    }
-                }
-
-                /*
-                // Check for blocked scripts
-                if (remoteScripts.blocked) {
-                    remoteScripts.retry(url);
-                    return; // Previous script was blocked...
-                }
-                */
-
-                // Try and load with normal script tag...
-                info.tag = remoteScripts.attach(info, remoteScripts.result);
             }
         });
+    },
+    infoBar: function (info) {
+        var url = info.url;
+        var container = remoteScripts.container();
+        if (container) {
+            elem = document.createElement('div');
+            elem.className = 'bar info';
+            elem.innerHTML =
+                '<i class="fa fa-cog faa-spin animated" style="margin-right: 3px;"></i>' +
+                '<span>Loading: </span>' +
+                '<a target="_blank" href="' + url + '">' + url + '</a>' +
+                '<a href="#" style="float: right; margin-right: 8px;">Dismis</a>' +
+                '<a href="#" style="float: right; margin-right: 8px;">Retry</a>';
+
+            container.appendChild(elem);
+        }
+        info.elem = elem;
+
+        var btnLink = (elem.childNodes.length > 2) ? elem.childNodes[2] : null;
+        if (btnLink) {
+            btnLink.onclick = function () {
+                return remoteScripts.fetch(this, info);
+            }
+        }
+
+        var btnClose = (elem.childNodes.length > 3) ? elem.childNodes[3] : null;
+        if (btnClose) {
+            btnClose.style.display = 'none';
+            btnClose.onclick = function () {
+                remoteScripts.failed(url, new Error('User dismissed error.'), true);
+                remoteScripts.remove(url);
+                return false;
+            }
+        }
+
+        var btnRetry = (elem.childNodes.length > 4) ? elem.childNodes[4] : null;
+        if (btnRetry) {
+            btnRetry.style.display = 'none';
+            btnRetry.onclick = function () {
+                remoteScripts.retry(url);
+                return false;
+            }
+        }
     },
     create: function (input, detect, done, parentElem) {
         var url = input;
@@ -158,9 +135,9 @@ var remoteScripts = {
                 info.state = true;
                 remoteScripts.ready(info.url);
             },
-            failure: function () {
-                console.warn('Warning: Failed to attach ' + info.url);
-                remoteScripts.failed(info.url);
+            failure: function (ex) {
+                console.warn('Warning: ' + (ex ? ex.message : 'Failed to attach ' + info.url));
+                remoteScripts.failed(info.url, ex);
             },
             setResult: function (resp) {
                 if (!resp || !resp.length) return;
@@ -169,25 +146,28 @@ var remoteScripts = {
                         switch (item.type) {
                             case 'script':
                                 var source = item.data;
-                                remoteScripts.script(info, source, function (state, elem) {
-                                    if (state) {
-                                        elem.setAttribute('relx', info.url);
-
-                                        // Replace current node....
-                                        var parentElem = (info.tag ? info.tag.parentNode : null) || document.body;
-                                        if (parentElem && info.tag) {
-                                            parentElem.replaceChild(elem, info.tag);
-                                        } else {
-                                            parentElem.appendChild(elem);
-                                        }
-                                        info.tag = elem;
+                                var elem = remoteScripts.script(info, source, function (state, elem) {
+                                    if (state) {                                        
+                                        info.success();
                                     } else {
-                                        info.failure();
+                                        info.failure(new Error('Script error: ' + item.url));
                                     }
                                 });
+                                if (elem) {
+                                    elem.setAttribute('relx', info.url);
+
+                                    // Replace current node....
+                                    var parentElem = (info.tag ? info.tag.parentNode : null) || document.body;
+                                    if (parentElem && info.tag) {
+                                        parentElem.replaceChild(elem, info.tag);
+                                    } else {
+                                        parentElem.appendChild(elem);
+                                    }
+                                    info.tag = elem;
+                                }
                                 break;
                             case 'failed':
-                                info.failure();
+                                info.failure(new Error('Child dialog failed to load.'));
                                 break;
                             default:
                                 console.warn(' - Unknown posted message:', item);
@@ -195,7 +175,7 @@ var remoteScripts = {
                         }
                     } catch (ex) {
                         console.error(ex);
-                        info.failure();
+                        info.failure(ex);
                     }
                 });
             },
@@ -235,22 +215,6 @@ var remoteScripts = {
             }
         }
 
-        if (!!window.___msgRelay___) {
-            info.relay = window.___msgRelay___;
-            info.relay.watch(info.url, function (url, state, data) {
-                if (url == info.url) {
-                    if (state === true) {
-                        info.success();
-                    } else if (state === false) {
-                        info.failure();
-                    }
-                    if (state != null) {
-                        info.relay.forget(info.url);
-                    }
-                }
-            });
-        }
-
         return info;
     },
     guid: function () {
@@ -282,13 +246,13 @@ var remoteScripts = {
 
             // Check for inline scripts
             if (info.remote === false && info.jscript) {
-                remoteScripts.script(info, info.jscript, function (state, elem) {
-                    if (elem) {
-                        elem.setAttribute('relx', info.url);
-                        document.body.appendChild(elem);
-                    }
+                var elem = remoteScripts.script(info, info.jscript, function (state, elem) {                    
                     if (callback) callback(url, state);
                 });
+                if (elem) {
+                    elem.setAttribute('relx', info.url);
+                    document.body.appendChild(elem);
+                }
                 return;
             }
 
@@ -309,18 +273,8 @@ var remoteScripts = {
                                     var result = xhttp.responseText;
                                     if (result) {
                                         // Attach the script directly
-                                        remoteScripts.script(info, result, function (state, elem) {
-                                            if (elem) elem.setAttribute('relx', info.url);
-                                            if (callback && state === true) {
-                                                // Replace current node....
-                                                var parentElem = (info.tag ? info.tag.parentNode : null) || document.body;
-                                                if (parentElem && info.tag) {
-                                                    parentElem.replaceChild(elem, info.tag);
-                                                } else {
-                                                    parentElem.appendChild(elem);
-                                                }
-                                                info.tag = elem;
-
+                                        var elem = remoteScripts.script(info, result, function (state, elem) {
+                                            if (callback && state === true) {                                                
                                                 // Signal that the script was asuccess...
                                                 if (callback) callback(url, true);
                                             } else if (state === false) {
@@ -328,6 +282,18 @@ var remoteScripts = {
                                                 if (callback) callback(url, false);
                                             }
                                         });
+                                        if (elem) {
+                                            elem.setAttribute('relx', info.url);
+
+                                            // Replace current node....
+                                            var parentElem = (info.tag ? info.tag.parentNode : null) || document.body;
+                                            if (parentElem && info.tag) {
+                                                parentElem.replaceChild(elem, info.tag);
+                                            } else {
+                                                parentElem.appendChild(elem);
+                                            }
+                                            info.tag = elem;
+                                        }
                                     }
                                 } else if (xhttp.status == 400) {
                                     remoteScripts.autoLoad = false; // Disable auto loading
@@ -343,14 +309,14 @@ var remoteScripts = {
                     }
                 } else {
                     // Try and load the script normally...
-                    var srciptElem = document.createElement('script');
-                    if (srciptElem) {
-                        srciptElem.onload = function (evt) {
+                    var scriptElem = document.createElement('script');
+                    if (scriptElem) {
+                        scriptElem.onload = function (evt) {
                             remoteScripts.autoLoad = false; // Disable auto loading
                             if (callback) callback(url, true);
                         }
-                        srciptElem.src = url;
-                        (info.parent || document.body).appendChild(srciptElem);
+                        scriptElem.src = url;
+                        (info.parent || document.body).appendChild(scriptElem);
                     }
                 }
 
@@ -369,27 +335,72 @@ var remoteScripts = {
             callback(url, false);
         }
 
-        return srciptElem;
+        return scriptElem;
     },
     script: function (info, source, callback) {
         try {
             // Try and load the script (marshalled)
             var jscript = 'try { ' + '\r\n'
                          + '    window.___msgRelay___.status("' + info.url + '", null);' + '\r\n'
-                         + '    (function(){' + source + '})()' + '\r\n'
+                         + '    ' + source + '\r\n'
                          + '    window.___msgRelay___.status("' + info.url + '", true);' + '\r\n'
                          + '} catch (ex) {' + '\r\n'
                          + '    window.___msgRelay___.status("' + info.url + '", false, ex); ' + '\r\n'
                          + '}';
-            var srciptElem = document.createElement('script');
-            if (srciptElem) {
-                srciptElem.textContent = jscript;
-                if (callback) callback(true, srciptElem);
+            var scriptElem = document.createElement('script');
+            if (scriptElem) {
+                scriptElem.textContent = jscript;
             }
+
+            // Define container
+            var relayer = window.___msgRelay___ = window.___msgRelay___ || {
+                events: {},
+                watch: function (relx, callback) {
+                    if (relx in relayer.events) {
+                        console.warn('Warning: Event ' + relx + ' already defined.');
+                    }
+                    relayer.events[relx] = callback;
+                },
+                forget: function (relx) {
+                    if (relx in relayer.events) {
+                        delete relayer.events[relx];
+                    } else {
+                        console.warn('Warning: Event ' + relx + ' not found.');
+                    }
+                },
+                status: function (relx, state, data) {
+                    if (relx in relayer.events) {
+                        relayer.events[relx](relx, state, data);
+                    } else {
+                        console.warn('Warning: Event ' + relx + ' not found.');
+                    }
+                },
+            };
+
+            if (!!window.___msgRelay___) {
+                info.relay = window.___msgRelay___;
+                info.relay.watch(info.url, function (url, state, data) {
+                    if (url == info.url) {
+                        if (state === true) {
+                            info.success();
+                            if (callback) callback(true, scriptElem);
+                        } else if (state === false) {
+                            info.failure(data || new Error('Inline script failed with no further details.'));
+                            if (callback) callback(false, scriptElem, data);
+                        }
+                        if (state != null) {
+                            info.relay.forget(info.url);
+                        }
+                    }
+                });
+            }
+
+            return scriptElem;
         } catch (ex) {
             console.warn('Warning: Script refused to load. ' + ex.message);
-            callback(false);
+            if (callback) callback(false, null, ex);
         }
+        return null;
     },
     result: function (url, success) {
         var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
@@ -410,6 +421,7 @@ var remoteScripts = {
     },
     retry: function (url) {
         var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
+        if (info && !info.remote) return;
         if (info && !info.state) {
             // Detect if present...
             if (info.qry && info.qry()) {
@@ -476,7 +488,7 @@ var remoteScripts = {
                     if (info.intv && msCounter >= msTimeout) {
                         // Failed to load...
                         info.intv = clearInterval(info.intv);
-                        return remoteScripts.failed(url);
+                        return remoteScripts.failed(url, new Error('The following script timed out: ' + info.url));
                     }
 
                     // Check if loaded...
@@ -542,7 +554,7 @@ var remoteScripts = {
         }
         remoteScripts.remove(url);
     },
-    failed: function (url) {
+    failed: function (url, ex, confirmed) {
         var info = (url in remoteScripts.urlStates) ? remoteScripts.urlStates[url] : null;
 
         // Update UI state...
@@ -550,13 +562,14 @@ var remoteScripts = {
             info.elem.className = 'bar error';
             info.elem.childNodes[0].className = 'fa fa-exclamation-circle faa-tada animated';
             info.elem.childNodes[1].innerHTML = '<b>Failure:</b> ';
+            info.elem.childNodes[2].title = (ex ? ex.message : '') || url;
             info.elem.childNodes[3].style.display = 'inline';
             info.elem.childNodes[4].style.display = 'inline';
         }
 
-        if (info && info.step) {
+        if (confirmed && info && info.step) {
             info.state = false;
-            info.step(url, info);
+            info.step(url, info, ex);
         }
     },
     remove: function (url) {
@@ -615,7 +628,7 @@ var remoteScripts = {
                     return win;
                 } else {
                     console.warn(' - Popup blocked...');
-                    //remoteScripts.failed(url);
+                    //remoteScripts.failed(url, new Error('Popup has been blocked!'));
                     return;
                 }
             } catch (ex) {
@@ -755,7 +768,7 @@ if (!!window || false) {
     window.remoteScripts = remoteScripts;
 }
 
-    // Expose as an AMD module
+// Expose as an AMD module
 if (typeof define === 'function' && define.amd) {
     define(remoteScripts);
 }
