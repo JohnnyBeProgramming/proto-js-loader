@@ -147,7 +147,7 @@ var remoteScripts = {
                             case 'script':
                                 var source = item.data;
                                 var elem = remoteScripts.script(info, source, function (state, elem) {
-                                    if (state) {                                        
+                                    if (state) {
                                         info.success();
                                     } else {
                                         info.failure(new Error('Script error: ' + item.url));
@@ -182,7 +182,7 @@ var remoteScripts = {
         };
 
         // Check if online resource...
-        var webUrl = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/i;
+        var webUrl = /^((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/i;
         var noLines = input.indexOf('\r\n') < 0;
         if (noLines && webUrl.test(url)) {
             // Remote script...
@@ -246,7 +246,7 @@ var remoteScripts = {
 
             // Check for inline scripts
             if (info.remote === false && info.jscript) {
-                var elem = remoteScripts.script(info, info.jscript, function (state, elem) {                    
+                var elem = remoteScripts.script(info, info.jscript, function (state, elem) {
                     if (callback) callback(url, state);
                 });
                 if (elem) {
@@ -274,7 +274,7 @@ var remoteScripts = {
                                     if (result) {
                                         // Attach the script directly
                                         var elem = remoteScripts.script(info, result, function (state, elem) {
-                                            if (callback && state === true) {                                                
+                                            if (callback && state === true) {
                                                 // Signal that the script was asuccess...
                                                 if (callback) callback(url, true);
                                             } else if (state === false) {
@@ -300,7 +300,10 @@ var remoteScripts = {
                                     if (callback) callback(url, false, new Error(xhttp.responseText));
                                 }
                             }
-                            xhttp.open("GET", url, true);
+                            xhttp.onerror = function (error) {
+                                if (callback) callback(url, false, new Error('Script was blocked.'));
+                            };
+                            xhttp.open('GET', url, true);
                             xhttp.send();
                         }
                     } catch (ex) {

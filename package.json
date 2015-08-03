@@ -1,6 +1,6 @@
 {
   "name": "proto-js-loader",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Prototyped script loader for javascript clients",
   "main": "ScriptLoader.js",
   "scripts": {
