@@ -1,4 +1,4 @@
-# Dynamic Script and Style Loader (Javascript)
+# Dynamic Script Loader (Javascript)
 
 This package imports and attaches (inline), the given external JavaScript and CSS resources.
 
