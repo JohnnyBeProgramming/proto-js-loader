@@ -14,11 +14,8 @@ You can install the library from npm:
 
 ## Example Usage
 
-In NodeJS you can access the library with the require keyword:
+On the client, you can then do:
 
-    // Example usage:
-    var remoteScripts = require('proto-js-loader');
-    
     // Simply define what you want loaded
     remoteScripts.define('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css');
     remoteScripts.define('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js');
