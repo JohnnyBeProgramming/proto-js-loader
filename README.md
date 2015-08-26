@@ -20,13 +20,13 @@ On the client, you can then do:
     remoteScripts.define('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css');
     remoteScripts.define('https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js');
     
-    // Inject styles and scripts directly into the document header
+    // Inject into the document header with callbacks
     remoteScripts.define([
       'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css',
       'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js'
     ], null, function (url, info){ 
       console.log('Done:', url); 
-    }, document.body);
+    }, document.head);
     
 
 ## Motivation
