@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Example Usage</title>
+    <script id="setBaseTag" type="text/javascript">
+        // Force relative dir to this folder
+        var url = document.location.href;
+        var pos = url.lastIndexOf('/');
+        if (pos > 0) {
+            url = url.substring(0, pos + 1);
+            document.write("<base href='" + url + "' />");
+        } else {
+            document.write("<base href='/' />");
+        }
+    </script>
+    <style>
+        /* Download CDN style sheets async and non-blocking */
+        @import 'https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css';
+        @import 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css';
+        @import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css';
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <nav class="col-md-12 navbar navbar-default">
+                <div class="container-fluid">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="./index.html">
+                            <i class="fa fa-code"></i>
+                            RemoteScriptLoader.js
+                        </a>
+                    </div>
+
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav">
+                            <li class="active">
+                                <a href="./index.html">Code Samples <span class="sr-only">(current)</span></a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/JohnnyBeProgramming/proto-js-loader">View Sources</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div class="row">
+            <div class="col-md-2">
+                <h3>Main Menu</h3>
+                <ul class="nav nav-pills nav-stacked">
+                    <li><a target="contents" href="samples.html#index">Javascript Basics</a></li>
+                    <li><a target="contents" href="samples.html#commonjs">CommonJS Example</a></li>
+                </ul>
+            </div>
+            <iframe id="contents" name="contents" class="col-md-10" src="samples.html#index" frameborder="0"
+                    style="overflow:visible; min-height: 550px;">
+                IFrames not supported...
+            </iframe>
+        </div>
+    </div>
+    <script src="../RemoteScriptLoader.js"></script>
+</body>
+</html>

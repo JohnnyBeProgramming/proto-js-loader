@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Code Samples</title>
+    <style>
+        /* Download CDN style sheets async and non-blocking */
+        @import 'https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.2/normalize.min.css';
+        @import 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css';
+        @import 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css';
+    </style>
+</head>
+<body style="padding-right: 8px;">
+    <div>
+        <h3><a id="index">Vanilla Javascript Usage</a></h3>
+        <p>
+            Firstly, you will need to include a copy of the <em>RemoteScriptLoader.js</em> library.
+            A copy of the library can be found <a target="_blank" href="../RemoteScriptLoader.js">here</a>.
+        </p>
+        <div data-height="86" data-theme-id="18379" data-slug-hash="dYPBqo" data-default-tab="html" data-user="JohnnyBeProgramming" class='codepen'>
+            <pre><code>&lt;script src=&quot;RemoteScriptLoader.js&quot;&gt;&lt;/script&gt;</code></pre>
+            <p>See the Pen <a href='http://codepen.io/JohnnyBeProgramming/pen/dYPBqo/'>dYPBqo</a> on <a href='http://codepen.io'>CodePen</a>.</p>
+        </div>
+        <p>
+            Next you can create an instance and use it like so:
+        </p>
+        <div data-height="340" data-theme-id="18379" data-slug-hash="XmJLPG" data-default-tab="js" data-user="JohnnyBeProgramming" class='codepen'>
+            <pre><code>var remoteScripts = new RemoteScriptLoader();
+// Simply define what you want loaded
+remoteScripts.define(&#39;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css&#39;);
+remoteScripts.define(&#39;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js&#39;);
+// Inject into the document header with callbacks
+remoteScripts.define([
+  &#39;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css&#39;,
+  &#39;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js&#39;
+], null, function (url, info){ 
+  console.log(&#39;Done:&#39;, url); 
+}, document.head);
+</code></pre>
+            <p>See the Pen <a href='http://codepen.io/JohnnyBeProgramming/pen/XmJLPG/'>XmJLPG</a> on <a href='http://codepen.io'>CodePen</a>.</p>
+        </div>
+        <hr />
+
+        <h3><a id="commonjs">CommonJS Sample Usage</a></h3>
+        <p>
+            You can load the package as a CommonJS module directly.
+        </p>
+        <div data-height="180" data-theme-id="18379" data-slug-hash="ZbYdqm" data-default-tab="js" data-user="JohnnyBeProgramming" class='codepen'>
+            <pre><code>var remoteScripts = require(&#39;proto-js-loader&#39;);
+// Simply define what you want loaded
+remoteScripts.define(&#39;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css&#39;);
+remoteScripts.define(&#39;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.js&#39;);
+</code></pre>
+            <p>See the Pen <a href='http://codepen.io/JohnnyBeProgramming/pen/ZbYdqm/'>ZbYdqm</a> on <a href='http://codepen.io'>CodePen</a>.</p>
+        </div>
+        <hr />
+
+    </div>
+    <div style="min-height:480px;" />
+    <script async src="https://assets.codepen.io/assets/embed/ei.js"></script>
+    <style>
+        .cp_embed_iframe {
+            margin-bottom: 8px;
+        }
+
+        .codepen p {
+            margin: 0;
+            padding: 0 8px 8px;
+            color: silver;
+            font-size: 9px;
+        }
+
+            .codepen p a {
+                color: #000000;
+                text-decoration: none;
+            }
+
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-button {
+            width: 8px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #eee;
+            border: thin solid lightgray;
+            box-shadow: 0px 0px 3px #dfdfdf inset;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #999;
+            border: thin solid gray;
+            border-radius: 10px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #7d7d7d;
+            }
+    </style>
+</body>
+</html>
