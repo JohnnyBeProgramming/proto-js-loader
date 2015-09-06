@@ -1,14 +1,15 @@
 {
-  "name": "proto-js-loader",
   "version": "0.0.10",
+  "name": "proto-js-loader",
   "description": "Prototyped script loader for javascript clients",
-  "main": "ScriptLoader.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "author": "Johnathan Lodder <Johnathan.Lodder@Gmail.com> (http://www.prototyped.info/)",
   "repository": {
     "type": "git",
     "url": "https://github.com/JohnnyBeProgramming/proto-js-loader"
+  },
+  "homepage": "https://github.com/JohnnyBeProgramming/proto-js-loader",
+  "bugs": {
+    "url": "https://github.com/JohnnyBeProgramming/proto-js-loader/issues"
   },
   "keywords": [
     "javascript",
@@ -16,10 +17,11 @@
     "loader",
     "remote"
   ],
-  "author": "Johnathan Lodder <Johnathan.Lodder@Gmail.com> (http://www.prototyped.info/)",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/JohnnyBeProgramming/proto-js-loader/issues"
-  },
-  "homepage": "https://github.com/JohnnyBeProgramming/proto-js-loader"
+  "main": "dist/RemoteScriptLoader.js",
+  "scripts": {
+    "install": "cd build & Setup.cmd",
+    "start": "cd build & Start.cmd",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
 }
